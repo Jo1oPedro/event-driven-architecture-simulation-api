@@ -1,0 +1,28 @@
+framework:
+    messenger:
+        failure_transport: failed
+
+        transports:
+            simulation:
+                dsn: '%env(MESSENGER_TRANSPORT_DSN)%'
+                options:
+                    exchange:
+                        name: simulation
+                        type: topic
+                    queues:
+                        simulation_events:
+                            binding_keys: ['simulation.*']
+                retry_strategy:
+                    max_retries: 3
+                    delay: 1000
+                    multiplier: 2
+            failed: 'doctrine://default?queue_name=failed'
+
+        routing:
+            'App\Message\SimulationMessage': simulation
+
+when@test:
+    framework:
+        messenger:
+            transports:
+                simulation: 'in-memory://'

@@ -125,3 +125,128 @@ docker compose exec php bin/console make:entity
 - **Dev:** hot reload via watch mode, XDebug enabled, source mounted
 - **Prod:** slim Debian image, rootless `www-data`, opcache preloading
 - Ports: 80, 443, 443/UDP (HTTP/3)
+
+---
+
+## Event-Driven Architecture Visualizer & Simulator
+
+### Visão Geral do Projeto
+
+Ferramenta educacional/de design onde o usuário modela arquiteturas orientadas a eventos usando um canvas visual (Vue Flow no frontend). Nós representam microserviços, filas, tópicos e bancos de dados. Edges representam fluxo de mensagens. O backend Symfony orquestra simulações reais usando RabbitMQ e transmite o estado em tempo real via Mercure.
+
+### O Que Precisa Ser Instalado/Configurado
+
+#### 1. RabbitMQ (Docker)
+
+Adicionar serviço RabbitMQ ao `compose.yaml`:
+
+```yaml
+rabbitmq:
+  image: rabbitmq:3-management-alpine
+  ports:
+    - "5672:5672"    # AMQP
+    - "15672:15672"  # Management UI
+  environment:
+    RABBITMQ_DEFAULT_USER: guest
+    RABBITMQ_DEFAULT_PASS: guest
+  volumes:
+    - rabbitmq_data:/var/lib/rabbitmq
+  healthcheck:
+    test: rabbitmq-diagnostics -q ping
+    interval: 10s
+    timeout: 5s
+    retries: 5
+```
+
+Adicionar `rabbitmq_data` aos volumes do compose.
+
+#### 2. Symfony Messenger + AMQP Transport
+
+```bash
+docker compose exec php composer require symfony/messenger symfony/amqp-messenger
+```
+
+Isso instala o componente Messenger e o transport AMQP. A extensão `ext-amqp` precisa ser adicionada ao Dockerfile.
+
+No Dockerfile, adicionar `amqp` à lista de extensões PHP:
+
+```dockerfile
+install-php-extensions amqp
+```
+
+#### 3. Variáveis de Ambiente
+
+Adicionar ao `.env`:
+
+```env
+MESSENGER_TRANSPORT_DSN=amqp://guest:guest@rabbitmq:5672/%2f/messages
+RABBITMQ_DSN=amqp://guest:guest@rabbitmq:5672/%2f
+```
+
+#### 4. Configuração do Messenger (`config/packages/messenger.yaml`)
+
+```yaml
+framework:
+  messenger:
+    transports:
+      simulation:
+        dsn: '%env(MESSENGER_TRANSPORT_DSN)%'
+        options:
+          exchange:
+            name: simulation
+            type: topic
+          queues:
+            simulation_events:
+              binding_keys: ['simulation.*']
+    routing:
+      'App\Message\SimulationMessage': simulation
+```
+
+### Arquitetura Backend (Entidades & Services)
+
+#### Entidades Principais
+
+- **Topology** — Representa uma topologia/arquitetura completa (nome, descrição, timestamps)
+- **TopologyNode** — Nó no grafo (tipo: microservice|queue|topic|database, posição x/y, config JSON)
+- **TopologyEdge** — Conexão entre nós (source_node, target_node, latência simulada, taxa de falha)
+- **Simulation** — Uma execução de simulação (topology, status: pending|running|completed|failed, timestamps)
+- **SimulationEvent** — Evento individual durante simulação (simulation, source_node, target_node, payload, status: sent|delivered|failed, latência real, timestamp)
+
+#### Services
+
+- **TopologyService** — CRUD de topologias com nós e edges
+- **SimulationService** — Orquestra a simulação: lê o grafo, publica mensagens no RabbitMQ seguindo a topologia, registra eventos
+- **SimulationPublisher** — Publica atualizações em tempo real via Mercure (estado de cada mensagem fluindo pelo grafo)
+- **MetricsService** — Calcula throughput, latência média, taxa de falha por nó/edge
+
+#### Controllers (API REST)
+
+- `TopologyController` — CRUD topologias (`/api/topologies`)
+- `SimulationController` — Iniciar/parar/status simulações (`/api/simulations`)
+- `MetricsController` — Métricas de simulação (`/api/simulations/{id}/metrics`)
+
+#### Messages (Symfony Messenger)
+
+- `SimulationMessage` — Mensagem que representa um evento fluindo de nó a nó na topologia
+- `SimulationMessageHandler` — Processa a mensagem, aplica latência simulada, decide falha aleatória, publica próximos hops no grafo, e notifica frontend via Mercure
+
+### Mercure (Tópicos de Real-Time)
+
+Tópicos usados para streaming de simulação:
+
+- `simulation/{simulationId}/events` — Cada evento de mensagem fluindo pelo grafo
+- `simulation/{simulationId}/metrics` — Métricas atualizadas periodicamente
+- `simulation/{simulationId}/status` — Mudanças de status da simulação
+
+### Fluxo da Simulação
+
+1. Frontend envia POST `/api/simulations` com `topologyId`
+2. Backend cria `Simulation`, lê nós/edges da `Topology`
+3. Para cada nó "produtor" (sem edges de entrada), publica `SimulationMessage` no RabbitMQ
+4. `SimulationMessageHandler` consome a mensagem:
+   a. Aplica `sleep()` com latência simulada do edge
+   b. Sorteia falha com base na taxa de falha do edge
+   c. Registra `SimulationEvent` no banco
+   d. Publica update via Mercure para o frontend
+   e. Se não falhou, publica `SimulationMessage` para os próximos nós do grafo (edges de saída)
+5. Frontend recebe eventos via EventSource e anima pulsos nas edges correspondentes
