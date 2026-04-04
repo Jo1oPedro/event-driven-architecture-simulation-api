@@ -31,13 +31,13 @@ class Topology
     /**
      * @var Collection<int, TopologyNode>
      */
-    #[ORM\OneToMany(targetEntity: TopologyNode::class, mappedBy: 'topology', orphanRemoval: true)]
+    #[ORM\OneToMany(targetEntity: TopologyNode::class, mappedBy: 'topology', cascade: ['persist'], orphanRemoval: true)]
     private Collection $nodes;
 
     /**
      * @var Collection<int, TopologyEdge>
      */
-    #[ORM\OneToMany(targetEntity: TopologyEdge::class, mappedBy: 'topology', orphanRemoval: true)]
+    #[ORM\OneToMany(targetEntity: TopologyEdge::class, mappedBy: 'topology', cascade: ['persist'], orphanRemoval: true)]
     private Collection $edges;
 
     public function __construct()
