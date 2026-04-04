@@ -15,8 +15,10 @@ class TopologyService
 {
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
-        private readonly TopologyRepository $topologyRepository
-    ) {}
+        private readonly TopologyRepository     $topologyRepository
+    )
+    {
+    }
 
     public function findAll(): array
     {
@@ -37,13 +39,13 @@ class TopologyService
 
         $nodeMap = $this->createNodes($request->nodes);
 
-        foreach($nodeMap as $node) {
+        foreach ($nodeMap as $node) {
             $topology->addNode($node);
         }
 
         $edgeMap = $this->createEdges($request->edges, $nodeMap);
 
-        foreach($edgeMap as $edge) {
+        foreach ($edgeMap as $edge) {
             $topology->addEdge($edge);
         }
 
@@ -57,10 +59,10 @@ class TopologyService
      * @param TopologyNodeRequest[] $nodes
      * @return TopologyNode[]
      */
-    private function createNodes(Array $nodes): array
+    private function createNodes(array $nodes): array
     {
         $nodeMap = [];
-        foreach($nodes as $nodeRequest) {
+        foreach ($nodes as $nodeRequest) {
             $node = new TopologyNode();
             $node->setType($nodeRequest->type);
             $node->setLabel($nodeRequest->label);
@@ -79,10 +81,10 @@ class TopologyService
      * @param TopologyNode[] $nodes
      * @return TopologyEdge[]
      */
-    public function createEdges(Array $edges, Array $nodes): array
+    public function createEdges(array $edges, array $nodes): array
     {
         $edgeMap = [];
-        foreach($edges as $edgeRequest) {
+        foreach ($edges as $edgeRequest) {
             $edge = new TopologyEdge();
             $edge->setSourceNode($nodes[$edgeRequest->source]);
             $edge->setTargetNode($nodes[$edgeRequest->target]);
@@ -93,5 +95,41 @@ class TopologyService
         }
 
         return $edgeMap;
+    }
+
+    public function update(Topology $topology, SaveTopologyRequest $request): Topology
+    {
+        $topology->setName($request->name);
+        $topology->setDescription($request->description);
+        $topology->setUpdatedAt(new \DateTimeImmutable());
+
+        foreach($topology->getNodes()->toArray() as $node) {
+            $topology->removeNode($node);
+        }
+
+        foreach($topology->getEdges()->toArray() as $edge) {
+            $topology->removeEdge($edge);
+        }
+
+        $nodeMap = $this->createNodes($request->nodes);
+
+        foreach ($nodeMap as $node) {
+            $topology->addNode($node);
+        }
+
+        $edgeMap = $this->createEdges($request->edges, $nodeMap);
+
+        foreach ($edgeMap as $edge) {
+            $topology->addEdge($edge);
+        }
+
+        $this->entityManager->flush();
+        return $topology;
+    }
+
+    public function delete(Topology $topology): void
+    {
+        $this->entityManager->remove($topology);
+        $this->entityManager->flush();
     }
 }
