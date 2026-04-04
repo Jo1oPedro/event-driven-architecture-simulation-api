@@ -1,0 +1,198 @@
+{
+	"info": {
+		"_postman_id": "eda-visualizer-api",
+		"name": "EDA Visualizer - Topology API",
+		"description": "Event-Driven Architecture Visualizer & Simulator - Endpoints de Topologia",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "https://localhost",
+			"type": "string"
+		},
+		{
+			"key": "topologyId",
+			"value": "1",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "Topologies",
+			"item": [
+				{
+					"name": "List all topologies",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/topologies",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "topologies"]
+						},
+						"description": "Retorna lista resumida de todas as topologias (sem nós e edges)"
+					},
+					"response": []
+				},
+				{
+					"name": "Create topology",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"if (jsonData.id) {",
+									"    pm.collectionVariables.set('topologyId', jsonData.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"E-commerce Architecture\",\n  \"description\": \"Arquitetura de microserviços para e-commerce\",\n  \"nodes\": [\n    {\n      \"clientId\": \"node-1\",\n      \"type\": \"microservice\",\n      \"label\": \"API Gateway\",\n      \"positionX\": 100,\n      \"positionY\": 200,\n      \"config\": {}\n    },\n    {\n      \"clientId\": \"node-2\",\n      \"type\": \"queue\",\n      \"label\": \"Order Queue\",\n      \"positionX\": 400,\n      \"positionY\": 200,\n      \"config\": {}\n    },\n    {\n      \"clientId\": \"node-3\",\n      \"type\": \"microservice\",\n      \"label\": \"Order Service\",\n      \"positionX\": 700,\n      \"positionY\": 200,\n      \"config\": {}\n    },\n    {\n      \"clientId\": \"node-4\",\n      \"type\": \"topic\",\n      \"label\": \"order.created\",\n      \"positionX\": 1000,\n      \"positionY\": 200,\n      \"config\": {}\n    },\n    {\n      \"clientId\": \"node-5\",\n      \"type\": \"microservice\",\n      \"label\": \"Payment Service\",\n      \"positionX\": 1300,\n      \"positionY\": 100,\n      \"config\": {}\n    },\n    {\n      \"clientId\": \"node-6\",\n      \"type\": \"microservice\",\n      \"label\": \"Notification Service\",\n      \"positionX\": 1300,\n      \"positionY\": 300,\n      \"config\": {}\n    },\n    {\n      \"clientId\": \"node-7\",\n      \"type\": \"database\",\n      \"label\": \"PostgreSQL Orders\",\n      \"positionX\": 700,\n      \"positionY\": 400,\n      \"config\": {}\n    }\n  ],\n  \"edges\": [\n    {\n      \"source\": \"node-1\",\n      \"target\": \"node-2\",\n      \"simulatedLatency\": 50,\n      \"failureRate\": 0.01\n    },\n    {\n      \"source\": \"node-2\",\n      \"target\": \"node-3\",\n      \"simulatedLatency\": 150,\n      \"failureRate\": 0.05\n    },\n    {\n      \"source\": \"node-3\",\n      \"target\": \"node-4\",\n      \"simulatedLatency\": 30,\n      \"failureRate\": 0.0\n    },\n    {\n      \"source\": \"node-3\",\n      \"target\": \"node-7\",\n      \"simulatedLatency\": 20,\n      \"failureRate\": 0.02\n    },\n    {\n      \"source\": \"node-4\",\n      \"target\": \"node-5\",\n      \"simulatedLatency\": 100,\n      \"failureRate\": 0.1\n    },\n    {\n      \"source\": \"node-4\",\n      \"target\": \"node-6\",\n      \"simulatedLatency\": 80,\n      \"failureRate\": 0.03\n    }\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/topologies",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "topologies"]
+						},
+						"description": "Cria uma topologia completa com nós e edges. O topologyId é salvo automaticamente na variável da collection."
+					},
+					"response": []
+				},
+				{
+					"name": "Get topology by ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/topologies/{{topologyId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "topologies", "{{topologyId}}"]
+						},
+						"description": "Retorna topologia completa com todos os nós e edges (usado para carregar no canvas)"
+					},
+					"response": []
+				},
+				{
+					"name": "Update topology",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"E-commerce Architecture v2\",\n  \"description\": \"Arquitetura atualizada com cache\",\n  \"nodes\": [\n    {\n      \"clientId\": \"node-1\",\n      \"type\": \"microservice\",\n      \"label\": \"API Gateway\",\n      \"positionX\": 100,\n      \"positionY\": 200,\n      \"config\": {}\n    },\n    {\n      \"clientId\": \"node-2\",\n      \"type\": \"queue\",\n      \"label\": \"Order Queue\",\n      \"positionX\": 400,\n      \"positionY\": 200,\n      \"config\": {}\n    },\n    {\n      \"clientId\": \"node-3\",\n      \"type\": \"microservice\",\n      \"label\": \"Order Service\",\n      \"positionX\": 700,\n      \"positionY\": 200,\n      \"config\": {}\n    },\n    {\n      \"clientId\": \"node-8\",\n      \"type\": \"database\",\n      \"label\": \"Redis Cache\",\n      \"positionX\": 400,\n      \"positionY\": 400,\n      \"config\": {}\n    }\n  ],\n  \"edges\": [\n    {\n      \"source\": \"node-1\",\n      \"target\": \"node-2\",\n      \"simulatedLatency\": 50,\n      \"failureRate\": 0.01\n    },\n    {\n      \"source\": \"node-2\",\n      \"target\": \"node-3\",\n      \"simulatedLatency\": 150,\n      \"failureRate\": 0.05\n    },\n    {\n      \"source\": \"node-1\",\n      \"target\": \"node-8\",\n      \"simulatedLatency\": 10,\n      \"failureRate\": 0.0\n    }\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/topologies/{{topologyId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "topologies", "{{topologyId}}"]
+						},
+						"description": "Atualiza topologia completa. Remove nós/edges antigos e recria com os novos dados (sync completo do canvas)."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete topology",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/topologies/{{topologyId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "topologies", "{{topologyId}}"]
+						},
+						"description": "Remove topologia e todos os nós/edges associados (cascade)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get topology not found",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/topologies/99999",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "topologies", "99999"]
+						},
+						"description": "Testa resposta 404 para topologia inexistente"
+					},
+					"response": []
+				},
+				{
+					"name": "Create topology (minimal)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Empty Topology\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/topologies",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "topologies"]
+						},
+						"description": "Cria topologia vazia (sem nós nem edges) - testa payload mínimo"
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}

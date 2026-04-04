@@ -8,22 +8,22 @@ use Symfony\Component\Validator\Constraints as Assert;
 class TopologyNodeRequest
 {
     public function __construct(
-        #temporary id from vue-flow
         #[Assert\NotBlank]
         public readonly string $clientId,
 
-        #[Assert\NotBlank]
+        #[Assert\NotNull]
         public readonly NodeType $type,
 
         #[Assert\NotBlank]
         public readonly string $label,
 
         #[Assert\NotNull]
-        public readonly string $positionX,
+        public readonly float $positionX,
 
         #[Assert\NotNull]
-        public readonly string $positionY,
+        public readonly float $positionY,
 
-        public readonly array $config = []
-    ) {}
+        public readonly array $config = [],
+    ) {
+    }
 }
