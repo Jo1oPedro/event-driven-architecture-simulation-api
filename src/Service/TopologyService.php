@@ -20,12 +20,15 @@ class TopologyService
     {
     }
 
+    /**
+     * @return Topology[]
+     */
     public function findAll(): array
     {
         return $this->topologyRepository->findAll();
     }
 
-    public function findById(string $id): array
+    public function findById(string $id): ?Topology
     {
         return $this->topologyRepository->findById($id);
     }
