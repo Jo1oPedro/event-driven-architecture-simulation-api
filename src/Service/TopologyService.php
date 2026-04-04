@@ -15,10 +15,8 @@ class TopologyService
 {
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
-        private readonly TopologyRepository     $topologyRepository
-    )
-    {
-    }
+        private readonly TopologyRepository $topologyRepository
+    ) {}
 
     /**
      * @return Topology[]
@@ -28,9 +26,9 @@ class TopologyService
         return $this->topologyRepository->findAll();
     }
 
-    public function findById(string $id): ?Topology
+    public function findById(int $id): ?Topology
     {
-        return $this->topologyRepository->findById($id);
+        return $this->topologyRepository->find($id);
     }
 
     public function create(SaveTopologyRequest $request): Topology
