@@ -24,6 +24,14 @@
 	root /app/public
 	encode zstd br gzip
 
+	# CORS para Mercure (SSE do frontend Vue)
+	@mercureCors path /.well-known/mercure*
+	header @mercureCors {
+		Access-Control-Allow-Origin "http://localhost:5173"
+		Access-Control-Allow-Headers "Content-Type, Authorization, Last-Event-ID"
+		Access-Control-Allow-Credentials "true"
+	}
+
 	mercure {
 		# Publisher JWT key
 		publisher_jwt {env.MERCURE_PUBLISHER_JWT_KEY} {env.MERCURE_PUBLISHER_JWT_ALG}
