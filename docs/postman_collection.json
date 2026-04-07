@@ -1,8 +1,8 @@
 {
 	"info": {
 		"_postman_id": "eda-visualizer-api",
-		"name": "EDA Visualizer - Topology API",
-		"description": "Event-Driven Architecture Visualizer & Simulator - Endpoints de Topologia",
+		"name": "EDA Visualizer API",
+		"description": "Event-Driven Architecture Visualizer & Simulator",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"variable": [
@@ -13,6 +13,11 @@
 		},
 		{
 			"key": "topologyId",
+			"value": "2",
+			"type": "string"
+		},
+		{
+			"key": "simulationId",
 			"value": "1",
 			"type": "string"
 		}
@@ -35,8 +40,7 @@
 							"raw": "{{baseUrl}}/api/topologies",
 							"host": ["{{baseUrl}}"],
 							"path": ["api", "topologies"]
-						},
-						"description": "Retorna lista resumida de todas as topologias (sem nós e edges)"
+						}
 					},
 					"response": []
 				},
@@ -76,8 +80,7 @@
 							"raw": "{{baseUrl}}/api/topologies",
 							"host": ["{{baseUrl}}"],
 							"path": ["api", "topologies"]
-						},
-						"description": "Cria uma topologia completa com nós e edges. O topologyId é salvo automaticamente na variável da collection."
+						}
 					},
 					"response": []
 				},
@@ -95,8 +98,7 @@
 							"raw": "{{baseUrl}}/api/topologies/{{topologyId}}",
 							"host": ["{{baseUrl}}"],
 							"path": ["api", "topologies", "{{topologyId}}"]
-						},
-						"description": "Retorna topologia completa com todos os nós e edges (usado para carregar no canvas)"
+						}
 					},
 					"response": []
 				},
@@ -122,8 +124,7 @@
 							"raw": "{{baseUrl}}/api/topologies/{{topologyId}}",
 							"host": ["{{baseUrl}}"],
 							"path": ["api", "topologies", "{{topologyId}}"]
-						},
-						"description": "Atualiza topologia completa. Remove nós/edges antigos e recria com os novos dados (sync completo do canvas)."
+						}
 					},
 					"response": []
 				},
@@ -141,8 +142,7 @@
 							"raw": "{{baseUrl}}/api/topologies/{{topologyId}}",
 							"host": ["{{baseUrl}}"],
 							"path": ["api", "topologies", "{{topologyId}}"]
-						},
-						"description": "Remove topologia e todos os nós/edges associados (cascade)"
+						}
 					},
 					"response": []
 				},
@@ -160,8 +160,7 @@
 							"raw": "{{baseUrl}}/api/topologies/99999",
 							"host": ["{{baseUrl}}"],
 							"path": ["api", "topologies", "99999"]
-						},
-						"description": "Testa resposta 404 para topologia inexistente"
+						}
 					},
 					"response": []
 				},
@@ -187,8 +186,164 @@
 							"raw": "{{baseUrl}}/api/topologies",
 							"host": ["{{baseUrl}}"],
 							"path": ["api", "topologies"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Simulations",
+			"item": [
+				{
+					"name": "Start simulation",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"if (jsonData.id) {",
+									"    pm.collectionVariables.set('simulationId', jsonData.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"topologyId\": {{topologyId}}\n}"
 						},
-						"description": "Cria topologia vazia (sem nós nem edges) - testa payload mínimo"
+						"url": {
+							"raw": "{{baseUrl}}/api/simulations",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "simulations"]
+						},
+						"description": "Inicia uma simulação para a topologia. O consumer do RabbitMQ precisa estar rodando: docker compose exec php bin/console messenger:consume simulation -vv"
+					},
+					"response": []
+				},
+				{
+					"name": "Get simulation status",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/simulations/{{simulationId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "simulations", "{{simulationId}}"]
+						},
+						"description": "Retorna status da simulação (running, completed, failed) e contagem de eventos"
+					},
+					"response": []
+				},
+				{
+					"name": "Get simulation events",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/simulations/{{simulationId}}/events",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "simulations", "{{simulationId}}", "events"]
+						},
+						"description": "Lista todos os eventos da simulação (cada mensagem que fluiu pelo grafo)"
+					},
+					"response": []
+				},
+				{
+					"name": "Start simulation (validation error)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/simulations",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "simulations"]
+						},
+						"description": "Testa validação - body sem topologyId deve retornar 422"
+					},
+					"response": []
+				},
+				{
+					"name": "Start simulation (topology not found)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"topologyId\": 99999\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/simulations",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "simulations"]
+						},
+						"description": "Testa 404 para topologia inexistente"
+					},
+					"response": []
+				},
+				{
+					"name": "Get simulation not found",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/simulations/99999",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "simulations", "99999"]
+						},
+						"description": "Testa 404 para simulação inexistente"
 					},
 					"response": []
 				}

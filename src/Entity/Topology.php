@@ -40,10 +40,17 @@ class Topology
     #[ORM\OneToMany(targetEntity: TopologyEdge::class, mappedBy: 'topology', cascade: ['persist'], orphanRemoval: true)]
     private Collection $edges;
 
+    /**
+     * @var Collection<int, Simulation>
+     */
+    #[ORM\OneToMany(targetEntity: Simulation::class, mappedBy: 'topology', cascade: ['remove'], orphanRemoval: true)]
+    private Collection $simulations;
+
     public function __construct()
     {
         $this->nodes = new ArrayCollection();
         $this->edges = new ArrayCollection();
+        $this->simulations = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -150,7 +157,6 @@ class Topology
     public function removeEdge(TopologyEdge $edge): static
     {
         if ($this->edges->removeElement($edge)) {
-            // set the owning side to null (unless already changed)
             if ($edge->getTopology() === $this) {
                 $edge->setTopology(null);
             }
@@ -159,4 +165,32 @@ class Topology
         return $this;
     }
 
+    /**
+     * @return Collection<int, Simulation>
+     */
+    public function getSimulations(): Collection
+    {
+        return $this->simulations;
+    }
+
+    public function addSimulation(Simulation $simulation): static
+    {
+        if (!$this->simulations->contains($simulation)) {
+            $this->simulations->add($simulation);
+            $simulation->setTopology($this);
+        }
+
+        return $this;
+    }
+
+    public function removeSimulation(Simulation $simulation): static
+    {
+        if ($this->simulations->removeElement($simulation)) {
+            if ($simulation->getTopology() === $this) {
+                $simulation->setTopology(null);
+            }
+        }
+
+        return $this;
+    }
 }

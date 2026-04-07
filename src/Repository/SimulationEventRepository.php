@@ -16,28 +16,13 @@ class SimulationEventRepository extends ServiceEntityRepository
         parent::__construct($registry, SimulationEvent::class);
     }
 
-    //    /**
-    //     * @return Simulation[] Returns an array of Simulation objects
-    //     */
-    //    public function findByExampleField($value): array
-    //    {
-    //        return $this->createQueryBuilder('s')
-    //            ->andWhere('s.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->orderBy('s.id', 'ASC')
-    //            ->setMaxResults(10)
-    //            ->getQuery()
-    //            ->getResult()
-    //        ;
-    //    }
-
-    //    public function findOneBySomeField($value): ?Simulation
-    //    {
-    //        return $this->createQueryBuilder('s')
-    //            ->andWhere('s.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->getQuery()
-    //            ->getOneOrNullResult()
-    //        ;
-    //    }
+    public function countBySimulation(int $simulationId): int
+    {
+        return (int) $this->createQueryBuilder('e')
+            ->select('COUNT(e.id)')
+            ->where('e.simulation = :simulationId')
+            ->setParameter('simulationId', $simulationId)
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
 }

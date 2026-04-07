@@ -16,8 +16,8 @@ class Simulation
     #[ORM\Column]
     private ?int $id = null;
 
-    #[ORM\ManyToOne]
-    #[ORM\JoinColumn(nullable: false)]
+    #[ORM\ManyToOne(inversedBy: 'simulations')]
+    #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
     private ?Topology $topology = null;
 
     #[ORM\Column(type: 'string', enumType: SimulationStatus::class)]
@@ -32,7 +32,7 @@ class Simulation
     /**
      * @var Collection<int, SimulationEvent>
      */
-    #[ORM\OneToMany(targetEntity: SimulationEvent::class, mappedBy: 'simulation', orphanRemoval: true)]
+    #[ORM\OneToMany(targetEntity: SimulationEvent::class, mappedBy: 'simulation', cascade: ['remove'], orphanRemoval: true)]
     private Collection $events;
 
     public function __construct()

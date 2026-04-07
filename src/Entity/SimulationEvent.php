@@ -19,11 +19,11 @@ class SimulationEvent
     private ?Simulation $simulation = null;
 
     #[ORM\ManyToOne]
-    #[ORM\JoinColumn(nullable: false)]
+    #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
     private ?TopologyNode $sourceNode = null;
 
     #[ORM\ManyToOne]
-    #[ORM\JoinColumn(nullable: false)]
+    #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
     private ?TopologyNode $targetNode = null;
 
     #[ORM\Column]

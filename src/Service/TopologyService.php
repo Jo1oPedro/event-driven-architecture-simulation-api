@@ -104,6 +104,11 @@ class TopologyService
         $topology->setDescription($request->description);
         $topology->setUpdatedAt(new \DateTimeImmutable());
 
+        foreach($topology->getSimulations() as $simulation) {
+            $this->entityManager->remove($simulation);
+        }
+        $this->entityManager->flush();
+
         foreach($topology->getNodes()->toArray() as $node) {
             $topology->removeNode($node);
         }
