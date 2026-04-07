@@ -4,6 +4,7 @@ namespace App\Service;
 
 use App\Entity\Simulation;
 use App\Entity\SimulationEvent;
+use App\Enum\EventStatus;
 use Symfony\Component\Mercure\HubInterface;
 use Symfony\Component\Mercure\Update;
 
@@ -26,6 +27,27 @@ class SimulationPublisher
                 'status' => $event->getStatus()->value,
                 'latency' => $event->getLatency(),
                 'createdAt' => $event->getCreatedAt()->format('c')
+            ])
+        );
+
+        $this->hub->publish($update);
+    }
+
+    public function publishEdgeStatus(
+        int $simulationId,
+        int $sourceNodeId,
+        int $targetNodeId,
+        EventStatus $status,
+        int $latency,
+    ): void {
+        $update = new Update(
+            "simulation/{$simulationId}/events",
+            json_encode([
+                'sourceNodeId' => $sourceNodeId,
+                'targetNodeId' => $targetNodeId,
+                'status' => $status->value,
+                'latency' => $latency,
+                'createdAt' => (new \DateTimeImmutable())->format('c'),
             ])
         );
 

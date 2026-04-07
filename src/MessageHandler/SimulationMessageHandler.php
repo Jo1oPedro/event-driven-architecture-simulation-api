@@ -40,17 +40,31 @@ class SimulationMessageHandler
             return;
         }
 
-        // 1. Simular latência
         $latencyMs = $edge->getSimulatedLatency();
-        if ($latencyMs > 0) {
-            usleep($latencyMs * 1000); // usleep recebe microsegundos
+
+        // 1. Publicar evento "sent" via Mercure ANTES da latência
+        //    Assim o frontend anima a edge imediatamente
+        try {
+            $this->simulationPublisher->publishEdgeStatus(
+                $simulation->getId(),
+                $edge->getSourceNode()->getId(),
+                $edge->getTargetNode()->getId(),
+                EventStatus::Sent,
+                $latencyMs,
+            );
+        } catch (\Throwable) {
         }
 
-        // 2. Decidir falha
+        // 2. Simular latência
+        if ($latencyMs > 0) {
+            usleep($latencyMs * 1000);
+        }
+
+        // 3. Decidir falha
         $failureRate = $edge->getFailureRate();
         $failed = (mt_rand(1, 10000) / 10000) <= $failureRate;
 
-        // 3. Registrar SimulationEvent
+        // 4. Registrar SimulationEvent no banco
         $event = new SimulationEvent();
         $event->setSimulation($simulation);
         $event->setSourceNode($edge->getSourceNode());
@@ -63,11 +77,10 @@ class SimulationMessageHandler
         $this->entityManager->persist($event);
         $this->entityManager->flush();
 
-        // 4. Publicar via Mercure
+        // 5. Publicar resultado final via Mercure (delivered ou failed)
         try {
             $this->simulationPublisher->publishEvent($event);
         } catch (\Throwable) {
-            // Mercure indisponível — não bloqueia o processamento
         }
 
         // 5. Se não falhou, propagar pros próximos nós

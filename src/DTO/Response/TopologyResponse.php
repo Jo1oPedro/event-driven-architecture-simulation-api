@@ -27,16 +27,16 @@ class TopologyResponse
         $this->createdAt = $topology->getCreatedAt()->format('c');  // ISO 8601
         $this->updatedAt = $topology->getUpdatedAt()?->format('c');
 
-        $this->nodes = $topology->getNodes()->map(
+        $this->nodes = array_values($topology->getNodes()->map(
             function (TopologyNode $node) {
                 return new TopologyNodeResponse($node);
             }
-        )->toArray();
+        )->toArray());
 
-        $this->edges = $topology->getEdges()->map(
+        $this->edges = array_values($topology->getEdges()->map(
             function (TopologyEdge $edge) {
                 return new TopologyEdgeResponse($edge);
             }
-        )->toArray();
+        )->toArray());
     }
 }
