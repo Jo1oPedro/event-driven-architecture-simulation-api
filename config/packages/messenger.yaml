@@ -8,10 +8,9 @@ framework:
                 options:
                     exchange:
                         name: simulation
-                        type: topic
+                        type: fanout
                     queues:
-                        simulation_events:
-                            binding_keys: ['simulation.*']
+                        simulation_events: ~
                 retry_strategy:
                     max_retries: 3
                     delay: 1000
